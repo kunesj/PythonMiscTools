@@ -2,7 +2,10 @@
 # encoding: utf-8
 
 import unittest
-from ..fixed_requests import FixedRequests
+
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from fixed_requests import FixedRequests
 
 class FixedRequestsTest(unittest.TestCase):
 
