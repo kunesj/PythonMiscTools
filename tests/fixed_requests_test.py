@@ -2,9 +2,7 @@
 # encoding: utf-8
 
 import unittest
-from nose.plugins.attrib import attr
-
-from fixed_requests import FixedRequests
+from ..fixed_requests import FixedRequests
 
 class FixedRequestsTest(unittest.TestCase):
 
