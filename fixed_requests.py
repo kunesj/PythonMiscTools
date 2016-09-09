@@ -3,6 +3,9 @@
 
 import logging
 logger = logging.getLogger(__name__)
+# disable messages from requests lib
+logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 import time
 import requests
@@ -175,5 +178,5 @@ class FixedRequests(object):
             code_info = ""
 
         # log status code and return if it's OK
-        logger.info( code_type+" - "+str(status_code)+" "+code_info+" [code_ok="+str(code_ok)+"]" )
+        logger.debug( code_type+" - "+str(status_code)+" "+code_info+" [code_ok="+str(code_ok)+"]" )
         return code_ok
