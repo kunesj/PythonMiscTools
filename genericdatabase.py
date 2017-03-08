@@ -41,7 +41,8 @@ class GenericDatabase(object):
         self.litecursor = None
         logger.info('Closed connection with database')
 
-    def new(self, databasepath):
+    @classmethod
+    def new(cls, databasepath):
         """ Creates new empty database file. Does nothing if database already exists. """
         logger.info("Creating new database at path: %s" % databasepath)
         if os.path.isfile(databasepath) and os.path.exists(databasepath):
@@ -111,7 +112,10 @@ class GenericDatabase(object):
         """
         conditions = [ {"column":"column_name", "type":"=", "value":value/values}, ... ]
 
-        supported condition types: "=", "!=", "<>", "<", ">", "<=", ">="
+        supported condition types: "=", "!=", "<>", "<", ">", "<=", ">=", IN, NOT IN
+
+        sort type: {"column":"column_name", "type":"ORDER BY", "value":"desc"/"asc"}
+
 
         type defaults to "="
 
@@ -120,8 +124,8 @@ class GenericDatabase(object):
         if len(conditions)==0:
             return "", []
 
-        cond_values = []
-        cond_list = []
+        cond_values = []; cond_list = []
+        sort_str = ""; sort_value = ""
 
         for x in conditions:
             if "type" not in x:
@@ -131,12 +135,27 @@ class GenericDatabase(object):
                 cond_list.append("%s%s?" % (x["column"], x["type"]))
                 cond_values.append(x["value"])
 
-            # TODO - BETWEEN, LIKE, IN
+            elif x["type"].lower() in ["in", "not in"]: # not tested
+                negation_str = "NOT " if x["type"].lower().startswith("not ") else ""
+                cond_list.append("%s %sIN (%s)" % (x["column"], negation_str, ", ".join("?"*len(list(x["value"]))) ))
+                cond_values+list(x["value"])
+
+            # TODO - BETWEEN, NOT BETWEEN, LIKE, NOT LIKE
+
+            elif x["type"].lower() in ["order by", "sort"]:
+                x["value"] = "ASC" if x["value"].lower()=="asc" else "DESC"
+                sort_str = "ORDER BY ? %s" % x["value"]
+                sort_value = x["column"]
 
             else:
                 raise Exception("Unsupported condition error '%s'!" % x["type"])
 
         cond_str = "WHERE "+" AND ".join(cond_list)
+
+        # add sort data
+        if sort_str != "":
+            cond_str += " %s" % sort_str
+            cond_values.append(sort_value)
 
         return cond_str, cond_values
 
