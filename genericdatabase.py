@@ -10,6 +10,9 @@ import sqlite3
 from caseinsensitivedict import CaseInsensitiveDict
 
 class GenericDatabase(object):
+    """
+    Very basic database class, that should ease working with SQL databases.
+    """
 
     def __init__(self, databasepath=None):
         self.databasepath = None
@@ -53,6 +56,42 @@ class GenericDatabase(object):
         liteconnection.close()
 
     ###
+    # Tables
+    ###
+
+    # TODO - working with tables
+
+    ###
+    # Fetch row dictionary methods
+    ###
+
+    def _rowsToDict(self, rows):
+        """
+        Input: list of rows from last query via self.litecursor.fetchall() etc..
+        Private method
+        """
+        result = []
+        for row in rows:
+            row_dict = {}
+            for i, column in enumerate(self.litecursor.description):
+                column_name = column[0]
+                row_dict[column_name] = row[i]
+            result.append(row_dict)
+        return result
+
+    def fetchOneDict(self):
+        """ Replaces self.litecursor.fetchone(), returns dict() """
+        return self._rowsToDict([self.litecursor.fetchone()])
+
+    def fetchManyDict(self, size):
+        """ Replaces self.litecursor.fetchmany(size), returns [dict(), dict(), ...] """
+        return self._rowsToDict(self.litecursor.fetchmany(size))
+
+    def fetchAllDict(self):
+        """ Replaces self.litecursor.fetchall(), returns [dict(), dict(), ...] """
+        return self._rowsToDict(self.litecursor.fetchall())
+
+    ###
     # Tools
     ###
 
@@ -64,29 +103,6 @@ class GenericDatabase(object):
         """ Input: Path of script file """
         with open(script_path, 'r') as f:
             self.executeSQLScriptFile(f)
-
-    def _rowsToDict(self, rows):
-        """ Input: list of rows from last query via self.litecursor.fetchall() etc.. """
-        result = []
-        for row in rows:
-            row_dict = {}
-            for i, column in enumerate(self.litecursor.description):
-                column_name = column[0]
-                row_dict[column_name] = row[i]
-            result.append(row_dict)
-        return result
-
-    def _fetchOneDict(self):
-        """ Replaces self.litecursor.fetchone(), returns dict() """
-        return self._rowsToDict([self.litecursor.fetchone()])
-
-    def _fetchManyDict(self, size):
-        """ Replaces self.litecursor.fetchmany(size), returns [dict(), dict(), ...] """
-        return self._rowsToDict(self.litecursor.fetchmany(size))
-
-    def _fetchAllDict(self):
-        """ Replaces self.litecursor.fetchall(), returns [dict(), dict(), ...] """
-        return self._rowsToDict(self.litecursor.fetchall())
 
     def getColumnNames(self, table_name):
         """ Returns list of column names for in a table """
@@ -108,117 +124,98 @@ class GenericDatabase(object):
 
         return stripped_dict
 
-    def processConditions(self, conditions):
+    def dict2Lists(self, data_dict):
+        """ Splits dictionary into 2 lists with keys and values separated """
+        keys = []; values = []
+        for key in data_dict:
+            keys.append(key)
+            values.append(data_dict[key])
+        return keys, values
+
+    def buildCondition(self, column_name, column_value, comparison_type): # TODO - BETWEEN, NOT BETWEEN, LIKE, NOT LIKE
         """
-        conditions = [ {"column":"column_name", "type":"=", "value":value/values}, ... ]
+        Input:
+            column_name - name of column to compare
+            column_value - value to compare with (can be list for IN, NOT IN)
+            comparison_type - type of comparision (supported types: =, !=, <>, <, >, <=, >=, IN, NOT IN)
 
-        supported condition types: "=", "!=", "<>", "<", ">", "<=", ">=", IN, NOT IN
+        Returns:
+            condition_string => "column_name NOT IN (?,?,?)"
+            condition_values => [5, 6, 7]
 
-        sort type: {"column":"column_name", "type":"ORDER BY", "value":"desc"/"asc"}
-
-
-        type defaults to "="
-
-        returns: cond_str"", cond_values[]
+        Returns "1=1", [] if column_name is None
         """
-        if len(conditions)==0:
-            return "", []
+        if column_name is None:
+            return "1=1", []
 
-        cond_values = []; cond_list = []
-        sort_str = ""; sort_value = ""
+        # list of values to compare with
+        condition_values = column_value if type(list()) == type(column_value) else [column_value,]
 
-        for x in conditions:
-            if "type" not in x:
-                x["type"] = "=" # default to this condition type
+        if comparison_type in ["=", "!=", "<>", "<", ">", "<=", ">="]:
+            return "%s%s?" % (column_name, comparison_type), condition_values
 
-            if x["type"] in ["=", "!=", "<>", "<", ">", "<=", ">="]:
-                cond_list.append("%s%s?" % (x["column"], x["type"]))
-                cond_values.append(x["value"])
+        elif comparison_type.strip().upper() == "IN":
+            return "%s IN (%s)" % ( column_name, ", ".join("?"*len(condition_values)) ), condition_values
 
-            elif x["type"].lower() in ["in", "not in"]: # not tested
-                negation_str = "NOT " if x["type"].lower().startswith("not ") else ""
-                cond_list.append("%s %sIN (%s)" % (x["column"], negation_str, ", ".join("?"*len(list(x["value"]))) ))
-                cond_values+list(x["value"])
+        elif comparison_type.strip().upper() == "NOT IN":
+            return "%s NOT IN (%s)" % ( column_name, ", ".join("?"*len(condition_values)) ), condition_values
 
-            # TODO - BETWEEN, NOT BETWEEN, LIKE, NOT LIKE
-
-            elif x["type"].lower() in ["order by", "sort"]:
-                x["value"] = "ASC" if x["value"].lower()=="asc" else "DESC"
-                sort_str = "ORDER BY ? %s" % x["value"]
-                sort_value = x["column"]
-
-            else:
-                raise Exception("Unsupported condition error '%s'!" % x["type"])
-
-        cond_str = "WHERE "+" AND ".join(cond_list)
-
-        # add sort data
-        if sort_str != "":
-            cond_str += " %s" % sort_str
-            cond_values.append(sort_value)
-
-        return cond_str, cond_values
+        else:
+            raise Exception("Unsupported Comparison Type! : '%s'" % comparison_type)
 
     ###
-    # Get/Set Generic
+    # Generic Row Operations
     ###
 
-    def addRow(self, table_name, data_dict):
-        stripped_dict = self.stripDict(table_name, data_dict)
+    def addRow(self, table_name, row_dict):
+        row_dict = self.stripDict(table_name, row_dict) # strip dict
 
         # create sql query command
-        value_str = ", ".join([ "?" for x in range(len(stripped_dict))])
-        column_names = []
-        arg_list = []
-        for key in stripped_dict:
-            column_names.append(key)
-            arg_list.append(stripped_dict[key])
-        query_str = "INSERT INTO %s (%s) VALUES (%s)" % (table_name, ", ".join(column_names), value_str)
-        arg_tuple = tuple(arg_list)
+        column_names, column_values = self.dict2Lists(row_dict)
+        query_str = "INSERT INTO %s (%s) VALUES (%s)" % ( table_name, ", ".join(column_names),
+            ", ".join([ "?" for x in range(len(row_dict))]) )
+        query_vals = tuple(column_values)
 
         # excute query
-        self.litecursor.execute(query_str, arg_tuple)
+        self.litecursor.execute(query_str, query_vals)
         self.liteconnection.commit()
 
         # return added row id
         return self.litecursor.lastrowid
 
-    def addRows(self, table_name, data_dict_list):
-        for data_dict in data_dict_list:
-            self.addRow(table_name, data_dict)
-
-    def updateRows(self, table_name, data_dict, condition_string="", condition_values=[]):
-        """
-        Use self.processConditions() method to prepare condition_string, condition_values variables.
-        """
-        stripped_dict = self.stripDict(table_name, data_dict)
-
+    def getRowsBy(self, table_name, column_name=None, column_value=None, comparison_type="="):
+        """ column_value - can be list """
         # create sql query command
-        arg_list = []
-        set_list = []
-        for key in stripped_dict:
-            set_list.append(key)
-            arg_list.append(stripped_dict[key])
-        set_str = ", ".join([ k+"=?" for k in set_list ])
-        arg_tuple = tuple(arg_list+condition_values)
-        query_str = "UPDATE %s SET %s %s" % (table_name, set_str, condition_string)
+        condition_string, condition_values = self.buildCondition(column_name, column_value, comparison_type)
+        query_str = "SELECT * FROM %s WHERE %s" % (table_name, condition_string)
+        query_vals = tuple(condition_values)
 
         # excute query
-        self.litecursor.execute(query_str, arg_tuple)
+        self.litecursor.execute(query_str, query_vals)
+        return self.fetchAllDict()
+
+    def updateRowsBy(self, row_dict, table_name, column_name=None, column_value=None, comparison_type="="):
+        """ column_value - can be list """
+        row_dict = self.stripDict(table_name, row_dict) # strip dict
+
+        # create sql query command
+        condition_string, condition_values = self.buildCondition(column_name, column_value, comparison_type)
+        column_names, column_values = self.dict2Lists(row_dict)
+        query_str = "UPDATE %s SET %s WHERE %s" % ( table_name,
+            ", ".join([ k+"=?" for k in column_names ]), condition_string )
+        query_vals = tuple(column_values+condition_values)
+
+        # excute query
+        self.litecursor.execute(query_str, query_vals)
         self.liteconnection.commit()
 
-    def selectRows(self, table_name, condition_string="", condition_values=[]):
-        """
-        Use self.processConditions() method to prepare condition_string, condition_values variables.
-        """
-        self.litecursor.execute("SELECT * FROM %s %s" % (table_name, condition_string), tuple(condition_values))
-        return self._fetchAllDict()
+    def deleteRowsBy(self, table_name, column_name=None, column_value=None, comparison_type="="):
+        """ column_value - can be list """
+        # create sql query command
+        condition_string, condition_values = self.buildCondition(column_name, column_value, comparison_type)
+        query_str = "DELETE FROM %s WHERE %s" % (table_name, condition_string)
+        query_vals = tuple(condition_values)
 
-    def deleteRows(self, table_name, condition_string="", condition_values=[]):
-        """
-        Use self.processConditions() method to prepare condition_string, condition_values variables.
-        """
-        if condition_string == "":
-            raise Exception("Tried to call deleteRows without any conditions!")
-        self.litecursor.execute("DELETE FROM %s %s" % (table_name, condition_string), tuple(condition_values))
+        # excute query
+        self.litecursor.execute(query_str, query_vals)
         self.liteconnection.commit()
