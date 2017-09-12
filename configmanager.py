@@ -55,6 +55,7 @@ class ConfigManager(object):
 
     def getList(self, section, option, lowercase=False):
         str_list = [ x.strip() for x in self.get(section, option, lowercase=lowercase).strip().split(",") ]
+        if len(str_list)==1 and str_list[0]=="": str_list = []
         return str_list
 
     def getListInt(self, section, option):
