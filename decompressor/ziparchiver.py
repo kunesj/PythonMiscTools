@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 import zipfile
 
-from eam.decompressor.archiver import Archiver
+from .archiver import Archiver
 
 class ZipArchiver(Archiver):
     """ Functions are documented in Archiver class """

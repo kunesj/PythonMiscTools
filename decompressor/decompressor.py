@@ -7,11 +7,11 @@ logger = logging.getLogger(__name__)
 import os, io
 
 # zipfile, tarfile lib is included in Python
-from eam.decompressor.ziparchiver import ZipArchiver
-from eam.decompressor.tararchiver import TarArchiver
+from .ziparchiver import ZipArchiver
+from .tararchiver import TarArchiver
 
 try:
-    from eam.decompressor.rararchiver import RarArchiver
+    from .rararchiver import RarArchiver
 except ImportError as e:
     logger.warning("Unable to load RarArchiver: %s" % (str(e),))
     RARLIB_INSTALLED = False
@@ -19,7 +19,7 @@ else:
     RARLIB_INSTALLED = True
 
 try:
-    from eam.decompressor.py7zarchiver import Py7zArchiver
+    from .py7zarchiver import Py7zArchiver
 except ImportError as e:
     logger.warning("Unable to load Py7zArchiver: %s" % (str(e),))
     PY7ZLIB_INSTALLED = False

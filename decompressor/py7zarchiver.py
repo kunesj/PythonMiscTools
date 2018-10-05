@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 import os
 import tempfile, shutil, subprocess
 
-from eam.decompressor.archiver import Archiver
+from .archiver import Archiver
 
 class External7zLib(object):
 

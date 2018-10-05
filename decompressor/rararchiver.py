@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 import rarfile
 
-from eam.decompressor.archiver import Archiver
+from .archiver import Archiver
 
 class RarArchiver(Archiver):
     """ Functions are documented in Archiver class """

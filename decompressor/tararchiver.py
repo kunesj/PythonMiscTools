@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 import tarfile
 
-from eam.decompressor.archiver import Archiver
+from .archiver import Archiver
 
 class TarArchiver(Archiver): # TODO - not tested
     """ Functions are documented in Archiver class """
