@@ -1,11 +1,11 @@
+# Google API
+client_secret.json
+credentials.json
+
 # Development dirs
 Cache
 Data*
 _OLD_VERSIONS_
-
-# OMM Datafiles
-*.ommgame
-*.ommpatch
 
 # Python stuff
 ################################################################################
