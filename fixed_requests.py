@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 
+import time
+import requests
+
 import logging
 logger = logging.getLogger(__name__)
 # disable messages from requests lib
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 
-import time
-import requests
 
 class FixedRequests(object):
     DEFAULT_HEADERS = {'user-agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:48.0) Gecko/20100101 Firefox/48.0"}
@@ -26,38 +27,38 @@ class FixedRequests(object):
         self.args_headers = dict(self.DEFAULT_HEADERS)
 
         # request delay
-        self.request_delay = 0 # min time delay between requests
+        self.request_delay = 0  # min time delay between requests
         self.last_request_time = 0
 
     ###
     # Getters, Setters, Updaters
     ###
 
-    def getHeaders(self):
+    def get_headers(self):
         return self.args_headers
 
-    def setHeaders(self, new_headers):
+    def set_headers(self, new_headers):
         self.args_headers = dict(new_headers)
 
-    def updateHeaders(self, new_headers):
+    def update_headers(self, new_headers):
         self.args_headers.update(new_headers)
 
-    def getCookies(self):
+    def get_cookies(self):
         return self.cookies
 
-    def setCookies(self, new_cookies):
+    def set_cookies(self, new_cookies):
         self.cookies = dict(new_cookies)
 
-    def updateCookies(self, new_cookies):
+    def update_cookies(self, new_cookies):
         self.cookies.update(new_cookies)
 
-    def getTimeout(self):
+    def get_timeout(self):
         return self.args_timeout
 
-    def setTimeout(self, new_timeout):
+    def set_timeout(self, new_timeout):
         self.args_timeout = new_timeout
 
-    def setRequestDelay(self, delay):
+    def set_request_delay(self, delay):
         self.request_delay = delay
 
     ###
@@ -84,13 +85,14 @@ class FixedRequests(object):
         * Only accepts keyword arguments
         * Needs to have "req_type": "get"/"post"
         """
-        kwargs = self._fillKWARGS(**kwargs)
+        kwargs = self._fill_kwargs(**kwargs)
 
         if "req_type" not in kwargs:
             kwargs["req_type"] = "get"
         req_type = kwargs["req_type"]
         del(kwargs["req_type"])
 
+        r = None
         error_num = 0
         while True:
             if error_num >= self.max_errors:
@@ -98,14 +100,14 @@ class FixedRequests(object):
 
             response_ok = True
             try:
-                self._delayRequests()
+                self._delay_requests()
                 if req_type == "get":
                     r = requests.get(**kwargs)
                 elif req_type == "post":
                     r = requests.post(**kwargs)
                 else:
                     raise Exception("Unknown request type!")
-                if not self._testStatusCode(r.status_code):
+                if not self._test_status_code(r.status_code):
                     response_ok = False
             except requests.exceptions.ConnectionError:
                 logger.warning("Connection refused")
@@ -120,11 +122,11 @@ class FixedRequests(object):
 
         # update cookies
         if self.use_cookies:
-            self.updateCookies(r.cookies.get_dict())
+            self.update_cookies(r.cookies.get_dict())
 
         return r
 
-    def _delayRequests(self):
+    def _delay_requests(self):
         """ makes sure that self.request_delay is obeyed """
         if self.request_delay == 0:
             return
@@ -133,7 +135,7 @@ class FixedRequests(object):
         if deltat < self.request_delay:
             time.sleep(float(self.request_delay)-deltat)
 
-    def _fillKWARGS(self, **kwargs):
+    def _fill_kwargs(self, **kwargs):
         if "timeout" not in kwargs:
             kwargs["timeout"] = self.args_timeout
         if "headers" not in kwargs:
@@ -144,7 +146,8 @@ class FixedRequests(object):
 
         return kwargs
 
-    def _testStatusCode(self, status_code):
+    @staticmethod
+    def _test_status_code(status_code):
         """ Returns True if status code is OK """
         # status code is OK by default
         code_ok = True
@@ -159,16 +162,18 @@ class FixedRequests(object):
                 }
 
         # detect status code type
-        if status_code >= 100 and status_code < 200:
+        if 100 <= status_code < 200:
             code_type = "Informational"
-        elif status_code >= 200 and status_code < 300:
+        elif 200 <= status_code < 300:
             code_type = "Success"
-        elif status_code >= 300 and status_code < 400:
+        elif 300 <= status_code < 400:
             code_type = "Redirection"
-        elif status_code >= 400 and status_code < 500:
-            code_type = "Client Error"; code_ok = False
-        elif status_code >= 500 and status_code < 600:
-            code_type = "Server Error"; code_ok = False
+        elif 400 <= status_code < 500:
+            code_type = "Client Error"
+            code_ok = False
+        elif 500 <= status_code < 600:
+            code_type = "Server Error"
+            code_ok = False
         else:
             code_type = "Unknown"
 
@@ -179,5 +184,5 @@ class FixedRequests(object):
             code_info = ""
 
         # log status code and return if it's OK
-        logger.debug( code_type+" - "+str(status_code)+" "+code_info+" [code_ok="+str(code_ok)+"]" )
+        logger.debug(code_type+" - "+str(status_code)+" "+code_info+" [code_ok="+str(code_ok)+"]")
         return code_ok

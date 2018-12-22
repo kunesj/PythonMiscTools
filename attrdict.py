@@ -1,9 +1,10 @@
 #!/usr/bin/python3
-#coding: utf-8
+# coding: utf-8
+
 
 class AttrDict(dict):
     """
-    Modifited dictionary that allows accesing data with attributes instead of keys.
+    Modified dictionary that allows accessing data with attributes instead of keys.
     Example: foo['bar'] => foo.bar
 
     Some pros:

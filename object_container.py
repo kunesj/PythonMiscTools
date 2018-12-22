@@ -11,7 +11,7 @@ class ObjectContainer:
     def __init__(self):
         self._wrapped_object = None
 
-    def replace_wrapped_container(self, obj):
+    def replace_wrapped_object(self, obj):
         """ Name of this function MUST NOT have any conflicts with function names of wrapped object """
         self._wrapped_object = obj
 

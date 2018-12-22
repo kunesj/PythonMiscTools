@@ -1,20 +1,23 @@
 #!/usr/bin/python3
-#coding: utf-8
+# coding: utf-8
+
+import csv
 
 import logging
 logger = logging.getLogger(__name__)
 
-import csv
 
-def readCSV(filepath):
+def read_csv(filepath):
     with open(filepath, "r") as f:
-        csvdicts = readCSVStream(f)
+        csvdicts = read_csv_stream(f)
     return csvdicts
 
-def readCSVStream(stream):
+
+def read_csv_stream(stream):
     return csv.DictReader(stream)
 
-def writeCSV(filepath, csvdicts):
+
+def write_csv(filepath, csvdicts):
     """ csvdicts => list(dict(), dict(), ...)"""
     # get headers
     headers = []

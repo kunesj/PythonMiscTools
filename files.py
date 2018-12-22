@@ -1,10 +1,11 @@
 #!/usr/bin/python3
-#coding: utf-8
+# coding: utf-8
 
 import os
 import ntpath
 
-def getFilenameExtension(fname):
+
+def get_filename_extension(fname):
     """ Returns extension of filename or None if the is none. """
     ext = os.path.splitext(fname)[1].lower()
     if ext.startswith("."):
@@ -13,26 +14,30 @@ def getFilenameExtension(fname):
         ext = None
     return ext
 
-def getFilenameExtensionless(fname):
+
+def get_filename_extensionless(fname):
     """ Returns filename without extension """
-    ext = getFilenameExtension(fname)
+    ext = get_filename_extension(fname)
     if ext is None:
         common_fname = fname
     else:
         common_fname = fname[:-(len(ext)+1)]
     return common_fname
 
-def getPathExtension(path):
-    """ Returns extension from path """
-    return getFilenameExtension(os.path.basename(path))
 
-def getPathExtensionless(path):
+def get_path_extension(path):
+    """ Returns extension from path """
+    return get_filename_extension(os.path.basename(path))
+
+
+def get_path_extensionless(path):
     """ Returns path to file without extension """
-    fname_extensionless = getFilenameExtensionless(os.path.basename(path))
+    fname_extensionless = get_filename_extensionless(os.path.basename(path))
     common_path = os.path.join(os.path.dirname(path), fname_extensionless)
     return common_path
 
-def getUniversalBasename(path):
+
+def get_universal_basename(path):
     """
     Works for both Windows (\) and Unix (/) paths
     Warning: Will return only part of filename on Linux IF there is '\' in it
