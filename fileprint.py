@@ -1,5 +1,5 @@
-#!/usr/bin/python3
-# coding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 
 def fileprint(strdata, openfile=None, quiet=False, newline=True):

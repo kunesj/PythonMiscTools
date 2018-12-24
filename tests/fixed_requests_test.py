@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-# encoding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import unittest
 
@@ -22,32 +22,32 @@ class FixedRequestsTest(unittest.TestCase):
         fr = FixedRequests()
 
         # test headers
-        fr.setHeaders(headers1)
-        get = fr.getHeaders()
+        fr.set_headers(headers1)
+        get = fr.get_headers()
         self.assertEqual(get['user-agent'], headers1['user-agent'])
         self.assertEqual(get['referer'], headers1['referer'])
         self.assertEqual(len(get), 2)
 
-        fr.updateHeaders(headers2)
-        get = fr.getHeaders()
+        fr.update_headers(headers2)
+        get = fr.get_headers()
         self.assertEqual(get['user-agent'], headers_updated['user-agent'])
         self.assertEqual(get['referer'], headers_updated['referer'])
         self.assertEqual(len(get), 2)
 
         # test cookies
-        fr.setCookies(cookies1)
-        get = fr.getCookies()
+        fr.set_cookies(cookies1)
+        get = fr.get_cookies()
         self.assertEqual(get['CAKE'], cookies1['CAKE'])
         self.assertEqual(get['LIE'], cookies1['LIE'])
         self.assertEqual(len(get), 2)
 
-        fr.updateCookies(cookies2)
-        get = fr.getCookies()
+        fr.update_cookies(cookies2)
+        get = fr.get_cookies()
         self.assertEqual(get['CAKE'], cookies_updated['CAKE'])
         self.assertEqual(get['LIE'], cookies_updated['LIE'])
         self.assertEqual(len(get), 2)
 
         # test timeout
-        fr.setTimeout(timeout1)
-        get = fr.getTimeout()
+        fr.set_timeout(timeout1)
+        get = fr.get_timeout()
         self.assertEqual(get, timeout1)
