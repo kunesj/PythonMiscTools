@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
 class Archiver(object):
     """
     Base class that should be inherited by any classes that deal with reading archives
@@ -10,10 +11,10 @@ class Archiver(object):
         self.extensions = []
         self.opened_archive = None
 
-    def getSupportedExtensions(self):
+    def get_supported_extensions(self):
         return self.extensions
 
-    def archiveOpened(self):
+    def archive_opened(self):
         """ Checks if there is any opened archive """
         return self.opened_archive is not None
 
@@ -25,14 +26,14 @@ class Archiver(object):
         """ Closes currently opened archive """
         raise NotImplementedError
 
-    def getFileList(self):
+    def get_file_list(self):
         """ Returns list of files in archive """
         raise NotImplementedError
 
-    def openFile(self, filepath):
+    def open_file(self, filepath):
         """ Returns stream """
         raise NotImplementedError
 
-    def extractFile(self, filepath, extractpath):
+    def extract_file(self, filepath, extractpath):
         """ Extracts file to path """
         raise NotImplementedError

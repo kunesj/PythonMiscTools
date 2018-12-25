@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging
-logger = logging.getLogger(__name__)
-
 import zipfile
 
 from .archiver import Archiver
+
+import logging
+logger = logging.getLogger(__name__)
+
 
 class ZipArchiver(Archiver):
     """ Functions are documented in Archiver class """
@@ -20,20 +21,20 @@ class ZipArchiver(Archiver):
         self.opened_archive = zipfile.ZipFile(archivepath)
 
     def close(self):
-        if self.archiveOpened():
+        if self.archive_opened():
             self.opened_archive.close()
         self.opened_archive = None
 
-    def getFileList(self):
-        filtered_paths = [] # filter out directories
+    def get_file_list(self):
+        filtered_paths = []  # filter out directories
         for fp in self.opened_archive.namelist():
             if fp.strip()[-1] in ["/", "\\"]:
                 continue
             filtered_paths.append(fp)
         return filtered_paths
 
-    def openFile(self, filepath):
+    def open_file(self, filepath):
         return self.opened_archive.open(filepath).read()
 
-    def extractFile(self, filepath, extractpath):
+    def extract_file(self, filepath, extractpath):
         self.opened_archive.extract(filepath, extractpath)

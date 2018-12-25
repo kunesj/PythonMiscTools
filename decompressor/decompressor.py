@@ -6,25 +6,25 @@ logger = logging.getLogger(__name__)
 
 import os, io
 
-# zipfile, tarfile lib is included in Python
+# zipfile and tarfile lib are included in Python
 from .ziparchiver import ZipArchiver
 from .tararchiver import TarArchiver
 
 try:
     from .rararchiver import RarArchiver
+    RARLIB_INSTALLED = True
 except ImportError as e:
     logger.warning("Unable to load RarArchiver: %s" % (str(e),))
+    RarArchiver = None
     RARLIB_INSTALLED = False
-else:
-    RARLIB_INSTALLED = True
 
 try:
     from .py7zarchiver import Py7zArchiver
+    PY7ZLIB_INSTALLED = True
 except ImportError as e:
     logger.warning("Unable to load Py7zArchiver: %s" % (str(e),))
+    Py7zArchiver = None
     PY7ZLIB_INSTALLED = False
-else:
-    PY7ZLIB_INSTALLED = True
 
 
 class Decompressor(object):
@@ -34,26 +34,26 @@ class Decompressor(object):
         self.opened_archive = None
         self.extensions = []
 
-        self.addArchiver(ZipArchiver())
-        self.addArchiver(TarArchiver())
+        self.add_archiver(ZipArchiver())
+        self.add_archiver(TarArchiver())
         if RARLIB_INSTALLED:
-            self.addArchiver(RarArchiver())
+            self.add_archiver(RarArchiver())
         if PY7ZLIB_INSTALLED:
-            self.addArchiver(Py7zArchiver())
+            self.add_archiver(Py7zArchiver())
 
         logger.info("Inited Decompressor, supported archive extensions: '%s'" % (", ".join(self.extensions),))
 
-    def addArchiver(self, archiver):
+    def add_archiver(self, archiver):
         self.archivers.append(archiver)
-        for e in archiver.getSupportedExtensions():
+        for e in archiver.get_supported_extensions():
             if e not in self.extensions:
                 self.extensions.append(e)
-        logger.info("Archiver with supported extensions '%s' added" % (", ".join(archiver.getSupportedExtensions()),))
+        logger.info("Archiver with supported extensions '%s' added" % (", ".join(archiver.get_supported_extensions()),))
 
-    def getSupportedExtensions(self):
+    def get_supported_extensions(self):
         return self.extensions
 
-    def archiveOpened(self):
+    def archive_opened(self):
         """ Checks if there is any opened archive """
         return self.opened_archive is not None
 
@@ -79,27 +79,28 @@ class Decompressor(object):
 
     def close(self):
         """ close any opened archives """
-        if self.archiveOpened():
+        if self.archive_opened():
             self.opened_archive.close()
         self.opened_archive = None
 
-    def getFileList(self):
+    def get_file_list(self):
         """ Returns list of files in archive """
-        if not self.archiveOpened():
+        if not self.archive_opened():
             raise Exception("No archive openned!")
         return self.opened_archive.getFileList()
 
-    def openFile(self, filepath):
+    def open_file(self, filepath):
         """ Returns stream """
-        if not self.archiveOpened():
+        if not self.archive_opened():
             raise Exception("No archive openned!")
         return io.BytesIO(self.opened_archive.openFile(filepath))
 
-    def extractFile(self, filepath, extractpath):
+    def extract_file(self, filepath, extractpath):
         """ Extracts file to path """
-        if not self.archiveOpened():
+        if not self.archive_opened():
             raise Exception("No archive openned!")
         return self.opened_archive.extractFile(filepath, extractpath)
+
 
 if __name__ == "__main__":
     import argparse
@@ -130,5 +131,5 @@ if __name__ == "__main__":
     # process archive
     dec = Decompressor()
     dec.open(args.path)
-    [ print(x) for x in dec.getFileList() ]
+    [print(x) for x in dec.get_file_list()]
     dec.close()

@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging
-logger = logging.getLogger(__name__)
-
 import os
 import tempfile, shutil, subprocess
 
 from .archiver import Archiver
+
+import logging
+logger = logging.getLogger(__name__)
+
 
 class External7zLib(object):
 
@@ -33,7 +34,7 @@ class External7zLib(object):
     def close(self):
         shutil.rmtree(self.work_dir)
 
-    def getfilelist(self):
+    def get_file_list(self):
         path_list = []
         for dirName, subdirList, fileList in os.walk(self.work_dir):
             for fname in fileList:
@@ -42,10 +43,11 @@ class External7zLib(object):
                 path_list.append(archive_path)
         return path_list
 
-    def openfile(self, path):
+    def open_file(self, path):
         with open(os.path.join(self.work_dir, path), "rb") as f:
             data = f.read()
         return data
+
 
 class Py7zArchiver(Archiver):
     """ Functions are documented in Archiver class """
@@ -59,18 +61,18 @@ class Py7zArchiver(Archiver):
         self.opened_archive = External7zLib(archivepath)
 
     def close(self):
-        if self.archiveOpened():
+        if self.archive_opened():
             self.opened_archive.close()
         self.opened_archive = None
 
-    def getFileList(self):
+    def get_file_list(self):
         # doesnt list directories
         return self.opened_archive.getfilelist()
 
-    def openFile(self, filepath):
+    def open_file(self, filepath):
         """ Returns Bytes """
         return self.opened_archive.openfile(filepath)
 
-    def extractFile(self, filepath, extractpath):
+    def extract_file(self, filepath, extractpath):
         with open(extractpath, 'wb') as f:
-            f.write(self.openFile(filepath))
+            f.write(self.open_file(filepath))

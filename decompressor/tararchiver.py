@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging
-logger = logging.getLogger(__name__)
-
 import tarfile
 
 from .archiver import Archiver
+
+import logging
+logger = logging.getLogger(__name__)
+
 
 class TarArchiver(Archiver): # TODO - not tested
     """ Functions are documented in Archiver class """
@@ -20,15 +21,15 @@ class TarArchiver(Archiver): # TODO - not tested
         self.opened_archive = tarfile.open(archivepath, 'r')
 
     def close(self):
-        if self.archiveOpened():
+        if self.archive_opened():
             self.opened_archive.close()
         self.opened_archive = None
 
-    def getFileList(self):
+    def get_file_list(self):
         return self.opened_archive.getmembers() # TODO - check if returns only files (not directories)
 
-    def openFile(self, filepath):
+    def open_file(self, filepath):
         return self.opened_archive.open(filepath).read()
 
-    def extractFile(self, filepath, extractpath):
+    def extract_file(self, filepath, extractpath):
         self.opened_archive.extract(filepath, extractpath)
