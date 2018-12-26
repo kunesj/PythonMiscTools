@@ -8,8 +8,8 @@ class ObjectContainer:
     or might need to be replaced by different object/variable later.
     """
 
-    def __init__(self):
-        self._wrapped_object = None
+    def __init__(self, obj=None):
+        self._wrapped_object = obj
 
     def replace_wrapped_object(self, obj):
         """ Name of this function MUST NOT have any conflicts with function names of wrapped object """

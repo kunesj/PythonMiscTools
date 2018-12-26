@@ -29,7 +29,7 @@ except ImportError as e:
 
 class Decompressor(object):
 
-    def __init__(self):
+    def __init__(self, path=None, extension=None):
         self.archivers = []
         self.opened_archive = None
         self.extensions = []
@@ -42,6 +42,9 @@ class Decompressor(object):
             self.add_archiver(Py7zArchiver())
 
         logger.info("Inited Decompressor, supported archive extensions: '%s'" % (", ".join(self.extensions),))
+
+        if path:
+            self.open(path, extension=extension)
 
     def add_archiver(self, archiver):
         self.archivers.append(archiver)

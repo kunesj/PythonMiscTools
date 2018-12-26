@@ -26,7 +26,8 @@ class External7zLib(object):
         ok = False
         for i in range(1, len(out_spl)+1):
             if out_spl[-i].strip().lower() == "Everything is Ok".lower():
-                ok = True; break
+                ok = True
+                break
         if not ok:
             self.close()
             raise Exception("Failed to open 7z file '%s' with external tool:\n%s" % (self.archive_path, out))
