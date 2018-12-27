@@ -3,7 +3,9 @@
 
 
 class Meta(type):
-    """ Make new classes always inherit from newest subclass """
+    """
+    When creating subclass, return updated parent class instead.
+    """
 
     _clsregistry = {}
 
