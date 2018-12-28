@@ -20,22 +20,22 @@ class Meta(type):
                 raise Exception('Can only inherit from one class. Creating new Base class might help?')
 
             # add class name variable if missing. Try to parse from base class, if that fails set it to 'name'.
-            if '__declared_class_name__' not in dct:
+            if '__declared_name__' not in dct:
                 class_name = name
                 for class_var in bases:
-                    if hasattr(class_var, '__declared_class_name__'):
-                        class_name = class_var.__declared_class_name__
+                    if hasattr(class_var, '__declared_name__'):
+                        class_name = class_var.__declared_name__
                         break
-                dct['__declared_class_name__'] = class_name
+                dct['__declared_name__'] = class_name
 
             # build new class and save for next request
-            if dct['__declared_class_name__'] not in cls._clsregistry:
+            if dct['__declared_name__'] not in cls._clsregistry:
                 new_class = super().__new__(cls, name, bases, dct)
-                cls._clsregistry[dct['__declared_class_name__']] = new_class
+                cls._clsregistry[dct['__declared_name__']] = new_class
 
             # update attributes of old class
             else:
-                new_class = cls._clsregistry[dct['__declared_class_name__']]
+                new_class = cls._clsregistry[dct['__declared_name__']]
                 for attr_key in dct:
                     if attr_key in ['__module__', '__qualname__']:
                         continue
@@ -51,6 +51,12 @@ def declarative_base(base=None):
 
     >>> Base = declarative_base()
     """
+    if base:
+        class _Meta(Meta, type(base)):
+            pass
+    else:
+        _Meta = Meta
     bases = (base, ) if base else ()
     dct = {}
-    return Meta('Base', bases, dct, _declarative_base=True)
+
+    return _Meta('Base', bases, dct, _declarative_base=True)
