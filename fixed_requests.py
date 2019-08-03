@@ -170,7 +170,6 @@ class FixedRequests(object):
             code_type = "Redirection"
         elif 400 <= status_code < 500:
             code_type = "Client Error"
-            code_ok = False
         elif 500 <= status_code < 600:
             code_type = "Server Error"
             code_ok = False
