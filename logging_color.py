@@ -7,7 +7,7 @@ import os
 try:
     import colorlog
 except ImportError:
-    pass
+    colorlog = None
 
 
 def setup_logging():
