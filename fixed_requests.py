@@ -100,15 +100,20 @@ class FixedRequests(object):
 
             response_ok = True
             try:
-                self._delay_requests()
+                self._delay_requests(error_num=error_num)
                 if req_type == "get":
                     r = requests.get(**kwargs)
                 elif req_type == "post":
                     r = requests.post(**kwargs)
                 else:
                     raise Exception("Unknown request type!")
-                if not self._test_status_code(r.status_code):
+
+                self._log_status_code(r.status_code)
+                if r.status_code == 429:  # too many requests
                     response_ok = False
+                elif r.status_code == 503:  # service unavailable
+                    response_ok = False
+
             except requests.exceptions.ConnectionError:
                 logger.warning("Connection refused")
                 response_ok = False
@@ -126,14 +131,16 @@ class FixedRequests(object):
 
         return r
 
-    def _delay_requests(self):
+    def _delay_requests(self, error_num):
         """ makes sure that self.request_delay is obeyed """
-        if self.request_delay == 0:
-            return
+        if error_num != 0:
+            sleep_time = 2**error_num
+            time.sleep(sleep_time)
 
-        deltat = time.time() - self.last_request_time
-        if deltat < self.request_delay:
-            time.sleep(float(self.request_delay)-deltat)
+        elif self.request_delay > 0:
+            deltat = time.time() - self.last_request_time
+            if deltat < self.request_delay:
+                time.sleep(float(self.request_delay)-deltat)
 
     def _fill_kwargs(self, **kwargs):
         if "timeout" not in kwargs:
@@ -147,11 +154,7 @@ class FixedRequests(object):
         return kwargs
 
     @staticmethod
-    def _test_status_code(status_code):
-        """ Returns True if status code is OK """
-        # status code is OK by default
-        code_ok = True
-
+    def _log_status_code(status_code):
         # specific status codes messages
         codes = {
                 200: "OK",
@@ -172,7 +175,6 @@ class FixedRequests(object):
             code_type = "Client Error"
         elif 500 <= status_code < 600:
             code_type = "Server Error"
-            code_ok = False
         else:
             code_type = "Unknown"
 
@@ -182,6 +184,5 @@ class FixedRequests(object):
         else:
             code_info = ""
 
-        # log status code and return if it's OK
-        logger.debug(code_type+" - "+str(status_code)+" "+code_info+" [code_ok="+str(code_ok)+"]")
-        return code_ok
+        # log status code
+        logger.debug("{} - {} {}".format(code_type, status_code, code_info))
