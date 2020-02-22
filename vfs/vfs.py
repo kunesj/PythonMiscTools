@@ -127,27 +127,27 @@ class VirtualFileSystem(object):
 
     # files
 
-    def exists(self, path: str, alt_types: Union[Iterable, None] = None) -> Tuple[bool, Union[str, None]]:
+    def exists(self, path: str, valid_types: Union[Iterable, None] = None) -> Tuple[bool, Union[str, None]]:
         """
         :param path: VFS path
-        :param alt_types: list of alternative file types
+        :param valid_types: list of valid file types, if provided will ignore file type parsed from path
         :return: tuple(True if found, file type of found file)
         """
         common_path, ft = self.parse_path(path)
-        alt_types = [(x.lower() if isinstance(x, str) else x) for x in set((alt_types or []) + [ft, ])]
+        valid_types = [(x.lower() if isinstance(x, str) else x) for x in (valid_types or [ft, ])]
         if common_path in self.index:
-            for file_type in alt_types:
+            for file_type in valid_types:
                 if file_type in self.index[common_path]:
                     return True, file_type
         return False, None
 
-    def get(self, path: str, alt_types: Union[Iterable, None] = None) -> Tuple[BinaryDataStream, Union[str, None]]:
+    def get(self, path: str, valid_types: Union[Iterable, None] = None) -> Tuple[BinaryDataStream, Union[str, None]]:
         """
         :param path: VFS path
-        :param alt_types: list of alternative file types
+        :param valid_types: list of alternative file types
         :return: tuple(BinaryDataStream, file type of found file)
         """
-        found, file_type = self.exists(path, alt_types=alt_types)
+        found, file_type = self.exists(path, valid_types=valid_types)
         if found:
             common_path, _ = self.parse_path(path)
             index_item = self.index[common_path][file_type]
