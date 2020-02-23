@@ -11,8 +11,9 @@ from ..caseinsensitivedict import CaseInsensitiveDict
 from ..fileprint import fileprint
 
 from .storage_interface import StorageInterface
-from .storage_directory import StorageDirectory
 from .storage_memory import StorageMemory
+from .storage_directory import StorageDirectory
+from .storage_archive import StorageArchive
 from . import vfs_utils
 
 _logger = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ VFSIndexItem = namedtuple('VFSIndexItem', 'storage storage_path')
 
 class VirtualFileSystem(object):
 
-    STORAGE_CLASSES = {StorageMemory, StorageDirectory, }
+    STORAGE_CLASSES = {StorageMemory, StorageDirectory, StorageArchive}
 
     def __init__(self, case_sensitive=False):
         self.case_sensitive = case_sensitive
