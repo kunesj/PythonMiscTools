@@ -2,38 +2,38 @@
 # -*- coding: utf-8 -*-
 
 
-class Archiver(object):
+class ArchiverInterface(object):
     """
     Base class that should be inherited by any classes that deal with reading archives
     """
 
-    def __init__(self):
-        self.extensions = []
+    EXTENSIONS = set()
+
+    def __init__(self, archive_path: str):
         self.opened_archive = None
+        if archive_path:
+            self.open(archive_path)
 
-    def get_supported_extensions(self):
-        return self.extensions
-
-    def archive_opened(self):
+    def archive_opened(self) -> bool:
         """ Checks if there is any opened archive """
         return self.opened_archive is not None
 
-    def open(self, archivepath):
+    def open(self, archive_path: str) -> None:
         """ Opens archive """
         raise NotImplementedError
 
-    def close(self):
+    def close(self) -> None:
         """ Closes currently opened archive """
         raise NotImplementedError
 
-    def get_file_list(self):
+    def get_file_list(self) -> list:
         """ Returns list of files in archive """
         raise NotImplementedError
 
-    def open_file(self, filepath):
+    def open_file(self, file_path: str) -> bytes:
         """ Returns stream """
         raise NotImplementedError
 
-    def extract_file(self, filepath, extractpath):
+    def extract_file(self, file_path: str, extract_path: str) -> None:
         """ Extracts file to path """
         raise NotImplementedError
