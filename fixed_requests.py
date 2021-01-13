@@ -24,7 +24,12 @@ class FixedRequests(object):
         if self.cloudscraper:
             import cloudscraper as cs
             self.requests_class = cs
-            self.requests_session = cs.create_scraper()
+            self.requests_session = cs.create_scraper(browser={
+                'browser': 'chrome',
+                'platform': 'windows',
+                'mobile': False,
+                'desktop': True,
+            })
         else:
             self.requests_class = requests
             self.requests_session = requests.Session()
