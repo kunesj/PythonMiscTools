@@ -14,13 +14,20 @@ logging.getLogger("urllib3").setLevel(logging.WARNING)
 class FixedRequests(object):
     DEFAULT_HEADERS = {'user-agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:48.0) Gecko/20100101 Firefox/48.0"}
 
-    def __init__(self, use_cookies=True, max_errors=5):
+    def __init__(self, use_cookies=True, max_errors=5, cloudscraper=False):
+        self.use_cookies = use_cookies
         self.max_errors = max_errors
         self.error_sleep_time = 1
 
-        # cookies
-        self.use_cookies = use_cookies
-        self.cookies = {}
+        # cloudscraper
+        self.cloudscraper = cloudscraper
+        if self.cloudscraper:
+            import cloudscraper as cs
+            self.requests_class = cs
+            self.requests_session = cs.create_scraper()
+        else:
+            self.requests_class = requests
+            self.requests_session = requests.Session()
 
         # requests arguments
         self.args_timeout = 30
@@ -44,13 +51,13 @@ class FixedRequests(object):
         self.args_headers.update(new_headers)
 
     def get_cookies(self):
-        return self.cookies
+        return dict(self.requests_session.cookies)
 
     def set_cookies(self, new_cookies):
-        self.cookies = dict(new_cookies)
+        self.requests_session.cookies = new_cookies
 
     def update_cookies(self, new_cookies):
-        self.cookies.update(new_cookies)
+        self.requests_session.cookies.update(new_cookies)
 
     def get_timeout(self):
         return self.args_timeout
@@ -102,9 +109,9 @@ class FixedRequests(object):
             try:
                 self._delay_requests(error_num=error_num)
                 if req_type == "get":
-                    r = requests.get(**kwargs)
+                    r = self.requests_session.get(**kwargs)
                 elif req_type == "post":
-                    r = requests.post(**kwargs)
+                    r = self.requests_session.post(**kwargs)
                 else:
                     raise Exception("Unknown request type!")
 
@@ -126,8 +133,8 @@ class FixedRequests(object):
                 continue
 
         # update cookies
-        if self.use_cookies:
-            self.update_cookies(r.cookies.get_dict())
+        if not self.use_cookies:
+            self.set_cookies({})
 
         return r
 
@@ -147,10 +154,6 @@ class FixedRequests(object):
             kwargs["timeout"] = self.args_timeout
         if "headers" not in kwargs:
             kwargs["headers"] = self.args_headers
-
-        if self.use_cookies:
-            kwargs["cookies"] = self.cookies
-
         return kwargs
 
     @staticmethod
