@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.9
 # -*- coding: utf-8 -*-
 
 from oauth2client.client import flow_from_clientsecrets
@@ -8,7 +8,7 @@ import httplib2
 import requests
 
 import os
-import pkg_resources
+import importlib.resources
 import json
 
 
@@ -16,7 +16,7 @@ class GoogleAPI(object):
     """
     Requirements
     ------------
-    pip install oauth2client requests
+    python3.9 -m pip install --upgrade oauth2client requests
 
     How to get valid 'client_secret.json'
     -------------------------------------
@@ -56,8 +56,10 @@ class GoogleAPI(object):
             List of google api scopes (strings)
         """
         # init default values
-        self.client_secret = pkg_resources.resource_filename(__name__, 'client_secret.json')
-        self.credentials = pkg_resources.resource_filename(__name__, 'credentials.json')
+        with importlib.resources.path(__package__, 'client_secret.json') as path:
+            self.client_secret = path
+        with importlib.resources.path(__package__, 'credentials.json') as path:
+            self.credentials = path
         self.scopes = [
             # GMail
             'https://www.googleapis.com/auth/gmail.readonly',
@@ -83,6 +85,7 @@ class GoogleAPI(object):
             If True, delete old credential and authorize new ones.
         """
         if reauth and os.path.exists(self.credentials):
+
             os.remove(self.credentials)
         storage = Storage(self.credentials)
         credentials = storage.get()
@@ -145,5 +148,5 @@ class GoogleAPI(object):
 
 if __name__ == "__main__":
     api = GoogleAPI()
-    api.authorize_credentials(reauth=True)
+    api.authorize_credentials(reauth=True)  # deletes old credentials.json
     print(api.call('GET', 'https://www.googleapis.com/gmail/v1/users/me/profile'))
